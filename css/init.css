@@ -1,0 +1,49 @@
+.chat
+{
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.chat li
+{
+	margin-bottom: 10px;
+	padding-bottom: 5px;
+	border-bottom: 1px dotted #B3A9A9;
+}
+
+.chat li.right .chat-body
+{
+	margin-right: 60px;
+}
+
+
+.chat li .chat-body p
+{
+	margin: 0;
+	color: #777777;
+}
+
+.panel .slidedown .glyphicon, .chat .glyphicon
+{
+	margin-right: 5px;
+}
+
+.panel-body.chat-msgs
+{
+	overflow-y: scroll;
+	height: 250px;
+}
+
+.container {
+	padding-top: 20px;
+	width: 600px;
+	margin: 0 auto;
+}
+.container .panel {
+}
+.btn-label {position: relative;left: -12px;display: inline-block;padding: 6px 12px;background: rgba(0,0,0,0.15);border-radius: 3px 0 0 3px;}
+.btn-labeled {padding-top: 0;padding-bottom: 0;}
+.input-group { margin-bottom:10px; }
+.separator { border-right: 1px solid #dfdfe0; }
+.glyphicon-log-out {color: white;}
