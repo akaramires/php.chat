@@ -23,20 +23,21 @@ $(function () {
 
 	function send_msg() {
 		var _msg = $("#input-msg").val();
-		if (_msg.length) {
+		if ($.trim(_msg).length) {
 			$.ajax({
 				url: "/check.php",
 				type: "POST",
 				data: {
 					type: "msg",
-					text: _msg
+					text: encodeURIComponent(_msg)
 				},
 				success: function (response) {
+					load_msgs();
 					scroll_down();
-					$("#input-msg").val("");
 				}
 			});
 		}
+		$("#input-msg").val("");
 	}
 
 	function load_msgs() {
@@ -47,6 +48,7 @@ $(function () {
 				type: "all"
 			},
 			success: function (response) {
+				$(".chat-msgs > ul.chat").html(response);
 				scroll_down();
 			}
 		});

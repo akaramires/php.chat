@@ -6,8 +6,8 @@
  */
 ?>
 
-<?php include "functions/Chat.php"; ?>
 <?php include "views/header.php"; ?>
+<?php include "functions/Chat.php"; ?>
 
 <div class="row">
 	<div class="col-md-12">
@@ -20,26 +20,8 @@
 				<ul class="chat">
 					<?php
 					$chat = new Chat();
-					$list = $chat->get_list();
-					for ($i = 0; $i < count($list); $i++) {
-						?>
-						<li class="left clearfix">
-							<div class="chat-body clearfix">
-								<div class="header">
-									<strong class="primary-font"><?php echo $list[$i]['username']; ?></strong>
-									<small class="pull-right text-muted">
-										<span class="glyphicon glyphicon-time"></span><?php echo $list[$i]['time']; ?>
-									</small>
-								</div>
-								<p>
-									<?php echo $list[$i]['body']; ?>
-								</p>
-							</div>
-						</li>
-					<?php
-					}
+					echo $chat->get_list_html();
 					?>
-
 				</ul>
 			</div>
 			<div class="panel-footer">
@@ -51,6 +33,14 @@
 								Send
 							</button>
                         </span>
+				</div>
+				<div class="input-group">
+					<?php
+						$users = $chat->get_users_current();
+						for($i = 0; $i < count($users); $i++) {
+							echo '<span class="label label-success">'.$users[$i].'</span>';
+						}
+					?>
 				</div>
 			</div>
 		</div>

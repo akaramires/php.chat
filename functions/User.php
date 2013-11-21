@@ -11,16 +11,18 @@ class User
 	protected $password;
 
 	protected $redis;
+	private $_prefix;
 
 	public function __construct($username, $password)
 	{
-		require $_SERVER["DOCUMENT_ROOT"].'/libs/php-redis/lib/redis.php';
-		require $_SERVER["DOCUMENT_ROOT"].'/libs/php-redis/lib/redis.pool.php';
-		require $_SERVER["DOCUMENT_ROOT"].'/libs/php-redis/lib/redis_list.peer.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis.pool.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis_list.peer.php';
 
 		redis_pool::add_servers(array('master' => array('127.0.0.1', 6379)));
 
 		$this->redis = new php_redis();
+		$this->_prefix = "test_";
 		$this->username = mysql_real_escape_string($username);
 		$this->password = mysql_real_escape_string($password);
 	}
@@ -29,8 +31,8 @@ class User
 	{
 		$username = $this->_check();
 		if ($username) {
-			$this->redis->remove_by_filter("users", array("username" => $this->username));
-			$this->redis->append("users", array("username" => $this->username, "password" => md5($this->password), "last_log" => strtotime(date("Y-m-d H:i:s"))));
+			$this->redis->remove_by_filter($this->_prefix . "users", array("username" => $this->username));
+			$this->redis->append($this->_prefix . "users", array("username" => $this->username, "password" => md5($this->password), "last_log" => strtotime(date("Y-m-d H:i:s"))));
 			$this->username = $username;
 			return true;
 		}
@@ -41,7 +43,7 @@ class User
 	{
 
 		if (!$this->login()) {
-			$this->redis->append("users", array("username" => $this->username, "password" => md5($this->password), "last_log" => strtotime(date("Y-m-d H:i:s"))));
+			$this->redis->append($this->_prefix . "users", array("username" => $this->username, "password" => md5($this->password), "last_log" => strtotime(date("Y-m-d H:i:s"))));
 			return true;
 		}
 		return false;
@@ -49,7 +51,7 @@ class User
 
 	protected function _check()
 	{
-		$response = $this->redis->get_filtered_list("users", array("username" => $this->username));
+		$response = $this->redis->get_filtered_list($this->_prefix . "users", array("username" => $this->username));
 		if (count($response) > 0) {
 			$submitted_pass = md5($this->password);
 			if ($submitted_pass == $response[0]['password']) {
@@ -58,4 +60,5 @@ class User
 		}
 		return false;
 	}
+
 }
