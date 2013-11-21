@@ -11,53 +11,64 @@ class User
 	protected $password;
 
 	protected $redis;
-	private $_prefix;
+
+	public $key_last_enter;
+	public $key_password;
 
 	public function __construct($username, $password)
 	{
-		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis.php';
-		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis.pool.php';
-		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis_list.peer.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska/Key/Hash.php';
 
-		redis_pool::add_servers(array('master' => array('127.0.0.1', 6379)));
+		$options = array(
+			'servers' => array(
+				'server1' => array('host' => '127.0.0.1', 'port' => 6379)
+			)
+		);
+		$this->redis = new Rediska($options);
 
-		$this->redis = new php_redis();
-		$this->_prefix = "test_";
 		$this->username = mysql_real_escape_string($username);
 		$this->password = mysql_real_escape_string($password);
+
+		$this->key_password = new Rediska_Key_Hash("users:password");
+		$this->key_last_enter = new Rediska_Key_Hash("users:last_enter");
 	}
 
+	/**
+	 * User login
+	 * @return bool
+	 */
 	public function login()
 	{
-		$username = $this->_check();
-		if ($username) {
-			$this->redis->remove_by_filter($this->_prefix . "users", array("username" => $this->username));
-			$this->redis->append($this->_prefix . "users", array("username" => $this->username, "password" => md5($this->password), "last_log" => strtotime(date("Y-m-d H:i:s"))));
-			$this->username = $username;
+		if ($this->_check()) {
+			$this->key_last_enter[$this->username] = strtotime(date("Y-m-d H:i:s"));
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * User registration
+	 * @return bool
+	 */
 	public function register()
 	{
-
 		if (!$this->login()) {
-			$this->redis->append($this->_prefix . "users", array("username" => $this->username, "password" => md5($this->password), "last_log" => strtotime(date("Y-m-d H:i:s"))));
+			$this->key_password[$this->username] = md5($this->password);
+			$this->key_last_enter[$this->username] = strtotime(date("Y-m-d H:i:s"));
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * User verification
+	 * @return bool
+	 */
 	protected function _check()
 	{
-		$response = $this->redis->get_filtered_list($this->_prefix . "users", array("username" => $this->username));
-		if (count($response) > 0) {
-			$submitted_pass = md5($this->password);
-			if ($submitted_pass == $response[0]['password']) {
-				return $response[0]['username'];
-			}
-		}
+		if ($this->key_password->get($this->username) && (md5($this->password) == $this->key_password->get($this->username)))
+			return true;
 		return false;
 	}
 

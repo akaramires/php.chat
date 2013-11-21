@@ -9,7 +9,7 @@ $(function () {
 		load_msgs();
 		setInterval(function () {
 			load_msgs();
-		}, 5000);
+		}, 3000);
 	});
 
 	$("#btn-chat").click(function (event) {

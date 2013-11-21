@@ -7,31 +7,33 @@
 
 class Chat
 {
-	private $redis;
-	private $_prefix;
+	protected $redis;
+
+	public $key_prefix;
+	public $key_messages;
 
 	public function __construct()
 	{
-		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis.php';
-		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis.pool.php';
-		require $_SERVER["DOCUMENT_ROOT"] . '/libs/php-redis/lib/redis_list.peer.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska.php';
+		require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska/Key/List.php';
 
-		redis_pool::add_servers(array('master' => array('127.0.0.1', 6379)));
+		$options = array(
+			'servers' => array(
+				'server1' => array('host' => '127.0.0.1', 'port' => 6379)
+			)
+		);
+		$this->redis = new Rediska($options);
+		$this->key_prefix = "chat:messages";
+		$this->key_messages = new Rediska_Key_List($this->key_prefix);
 
-		$this->redis = new php_redis();
-		$this->_prefix = "test_";
+		$this->key_user_last_enter = new Rediska_Key_Hash("users:last_enter");
+		$this->key_user_password = new Rediska_Key_List("users:password");
 	}
 
-	public function get_list($limit = 50)
-	{
-		$offset = $this->get_list_count() - $limit;
-		$list = $this->redis->get_list($this->_prefix . "chat", $limit, $offset);
-		for ($i = 0; $i < count($list); $i++) {
-			$list[$i]['time'] = $this->get_time_ago(date("Y-m-d H:i:s", $list[$i]['time']));
-		}
-		return $list;
-	}
-
+	/**
+	 * Get HTML messages list
+	 * @return string
+	 */
 	public function get_list_html()
 	{
 		$html = "";
@@ -52,14 +54,66 @@ class Chat
 		return $html;
 	}
 
-	public function get_list_count()
+	/**
+	 * Get messages array
+	 * @param int $limit
+	 * @return array
+	 */
+	public function get_list($limit = 50)
 	{
-		return $this->redis->get_list_length($this->_prefix . "chat");
+		$list_length = $this->get_list_count();
+		$offset = (($list_length - $limit) < 0) ? 0 : $list_length;
+		$list = $this->key_messages->getValues($offset, $list_length);
+		for ($i = 0; $i < count($list); $i++) {
+			$list[$i]['time'] = $this->get_time_ago(date("Y-m-d H:i:s", $list[$i]['time']));
+		}
+		return $list;
 	}
 
+	/**
+	 * Get messages count
+	 * @return int
+	 */
+	public function get_list_count()
+	{
+		return $this->key_messages->getLength();
+	}
+
+	/**
+	 * Insert new message
+	 * @param $body
+	 * @param $user
+	 * @return bool
+	 */
 	public function insert_msg($body, $user)
 	{
-		return !$this->redis->append($this->_prefix . "chat", array("username" => $user, "body" => $body, "time" => strtotime(date("Y-m-d H:i:s"))));
+		$this->key_user_last_enter[$user] = strtotime(date("Y-m-d H:i:s"));
+
+		return $this->key_messages->append(array(
+			"username" => $user,
+			"body" => $body,
+			"time" => strtotime(date("Y-m-d H:i:s"))
+		));
+	}
+
+	public function get_users_count()
+	{
+		return $this->key_user_password->count();
+	}
+
+	public function get_users_current()
+	{
+		$tenMinAgo = strtotime(date('Y-m-d H:i:s', strtotime("-10 min")));
+		$now = strtotime(date("Y-m-d H:i:s"));
+
+		$users = $this->key_user_last_enter->toArray();
+		$curUsers = array();
+		foreach ($users as $username => $time) {
+			if (($time > $tenMinAgo) && ($time <= $now)) {
+				$curUsers[] = $username;
+			}
+		}
+		return $curUsers;
 	}
 
 	public function get_time_ago($datetime, $full = false)
@@ -90,26 +144,6 @@ class Chat
 
 		if (!$full) $string = array_slice($string, 0, 1);
 		return $string ? implode(', ', $string) . ' ago' : 'just now';
-	}
-
-	public function get_users_count()
-	{
-		return $this->redis->get_list_length($this->_prefix . "users");
-	}
-
-	public function get_users_current()
-	{
-		$tenMinAgo = strtotime(date('Y-m-d H:i:s', strtotime("-10 min")));
-		$now = strtotime(date("Y-m-d H:i:s"));
-
-		$users = $this->redis->get_list($this->_prefix . "users", $this->get_users_count());
-		$curUsers = array();
-		for ($i = 0; $i < count($users); $i++) {
-			if (($users[$i]['last_log'] >= $tenMinAgo) && ($users[$i]['last_log'] < $now)) {
-				$curUsers[] = $users[$i]['username'];
-			}
-		}
-		return $curUsers;
 	}
 
 }
