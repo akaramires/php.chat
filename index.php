@@ -34,7 +34,7 @@
 							</button>
                         </span>
 				</div>
-				<div class="input-group">
+				<div class="input-group online-users">
 					<?php
 						$users = $chat->get_users_current();
 						for($i = 0; $i < count($users); $i++) {

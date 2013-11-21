@@ -48,7 +48,10 @@ if (!empty($_POST['type'])) {
 		case "all":
 			$chat = new Chat();
 
-			echo $chat->get_list_html();
+			$info = array();
+			$info['msg'] = $chat->get_list_html();
+			$info['users'] = $chat->get_users_current();
+			echo json_encode($info);
 
 			break;
 	}

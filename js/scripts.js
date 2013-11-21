@@ -5,8 +5,11 @@
  */
 
 $(function () {
-	$(document).ready(function(){
-		scroll_down();
+	$(document).ready(function () {
+		load_msgs();
+		setInterval(function () {
+			load_msgs();
+		}, 5000);
 	});
 
 	$("#btn-chat").click(function (event) {
@@ -25,15 +28,14 @@ $(function () {
 		var _msg = $("#input-msg").val();
 		if ($.trim(_msg).length) {
 			$.ajax({
-				url: "/check.php",
-				type: "POST",
-				data: {
+				url    : "/check.php",
+				type   : "POST",
+				data   : {
 					type: "msg",
 					text: encodeURIComponent(_msg)
 				},
 				success: function (response) {
 					load_msgs();
-					scroll_down();
 				}
 			});
 		}
@@ -42,21 +44,31 @@ $(function () {
 
 	function load_msgs() {
 		$.ajax({
-			url: "/check.php",
-			type: "POST",
-			data: {
+			url    : "/check.php",
+			type   : "POST",
+			data   : {
 				type: "all"
 			},
 			success: function (response) {
-				$(".chat-msgs > ul.chat").html(response);
+				data = JSON.parse(response);
+
+				$(".chat-msgs > ul.chat").html(data.msg);
+
+				var users = "";
+				for(i in data.users) {
+					users += '<span class="label label-success">'+data.users[i]+'</span>';
+				}
+				$(".online-users").html(users);
+
 				scroll_down();
 			}
 		});
 	}
 
 	function scroll_down() {
-		var wtf    = $('.chat-msgs');
+		var wtf = $('.chat-msgs');
 		var height = wtf[0].scrollHeight;
 		wtf.scrollTop(height);
 	}
+
 });
