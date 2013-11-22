@@ -53,7 +53,7 @@ class User
 	 */
 	public function register()
 	{
-		if (!$this->login()) {
+		if (!$this->_checkLogin()) {
 			$this->key_password[$this->username] = md5($this->password);
 			$this->key_last_enter[$this->username] = strtotime(date("Y-m-d H:i:s"));
 			return true;
@@ -68,6 +68,17 @@ class User
 	protected function _check()
 	{
 		if ($this->key_password->get($this->username) && (md5($this->password) == $this->key_password->get($this->username)))
+			return true;
+		return false;
+	}
+
+	/**
+	 * Check User Login
+	 * @return bool
+	 */
+	protected function _checkLogin()
+	{
+		if ($this->key_password->get($this->username))
 			return true;
 		return false;
 	}

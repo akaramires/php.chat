@@ -9,6 +9,9 @@ session_start();
 
 include "functions/User.php";
 include "functions/Chat.php";
+include "functions/FormSecure.php";
+
+$formKey = new FormSecure();
 
 if (!empty($_POST['type'])) {
 
@@ -17,7 +20,7 @@ if (!empty($_POST['type'])) {
 		case "in":
 			$User = new User($_POST['username'], $_POST['password']);
 
-			if ($user = $User->login()) {
+			if ($user = $User->login() && $formKey->validate()) {
 				$_SESSION['username'] = $_POST['username'];
 				header('Location: /');
 			} else {
@@ -29,7 +32,7 @@ if (!empty($_POST['type'])) {
 		case "up":
 			$User = new User($_POST['username'], $_POST['password']);
 
-			if ($user = $User->register()) {
+			if ($user = $User->register() && $formKey->validate()) {
 				$_SESSION['username'] = $_POST['username'];
 				header('Location: /');
 			} else {

@@ -8,32 +8,40 @@
 
 <?php include "views/header.php"; ?>
 <?php
-require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska.php';
-require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska/Key.php';
-require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska/Key/List.php';
-require $_SERVER["DOCUMENT_ROOT"] . '/libs/rediska/Rediska/Key/Hash.php';
-$options = array(
-	'servers' => array(
-		'server1' => array('host' => '127.0.0.1', 'port' => 6379)
-	)
-);
-$redis = new Rediska($options);
-$user = new Rediska_Key_Hash('users:last_enter');
-//echo "<pre>";
-//var_dump($user->getFieldsAndValues());
-//echo "</pre>";
+	require 'functions/FormSecure.php';
+	$formKey = new FormSecure();
 ?>
+
 <div class="row">
 	<div class="col-xs-12 col-sm-12 col-md-12">
 		<div class="panel panel-primary">
 			<div class="panel-heading">
-				<h3 class="panel-title">Chat</h3>
+				<h3 class="panel-title">
+					<a href="/">Chat</a>
+				</h3>
 			</div>
 			<div class="panel-body">
 				<div class="row">
+					<div class="col-xs-12 col-sm-12 col-md-12">
+						<?php
+							if (isset($_GET['up']) && $_GET['up'] == 'false') {
+								echo '<div class="alert alert-danger">Registration failed. Please try again</div>';
+							}
+							if (isset($_GET['in']) && $_GET['in'] == 'false') {
+								echo '<div class="alert alert-danger">Login failed. Please try again</div>';
+							}
+
+							$secret = $formKey->outputKey();
+							$secret_field = "<input type='hidden' name='form_key' id='form_key' value='" . $secret . "' />";
+
+						?>
+
+					</div>
 					<div class="col-xs-6 col-sm-6 col-md-6 login-box text-center">
 						<form role="form" method="post" action="check.php">
-							<h3>Sign in</h3>
+							<h3>Sign In</h3>
+
+							<?php echo $secret_field; ?>
 
 							<div class="input-group">
 								<span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
@@ -54,6 +62,8 @@ $user = new Rediska_Key_Hash('users:last_enter');
 					<div class="col-xs-6 col-sm-6 col-md-6 login-box text-center">
 						<form role="form" method="post" action="check.php">
 							<h3>Sign Up</h3>
+
+							<?php echo $secret_field; ?>
 
 							<div class="input-group">
 								<span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
