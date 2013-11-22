@@ -44,7 +44,7 @@ if (!empty($_POST['type'])) {
 		case "msg":
 			$chat = new Chat();
 
-			echo !$chat->insert_msg($_POST['text'], $_SESSION['username']);
+			echo !$chat->insert_msg(strip_tags(urldecode($_POST['text'])), $_SESSION['username']);
 
 			break;
 

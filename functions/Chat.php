@@ -89,6 +89,8 @@ class Chat
 	{
 		$this->key_user_last_enter[$user] = strtotime(date("Y-m-d H:i:s"));
 
+//		$body = htmlspecialchars(strip_tags($body));
+
 		return $this->key_messages->append(array(
 			"username" => $user,
 			"body" => $body,
